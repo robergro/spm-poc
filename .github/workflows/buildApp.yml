@@ -1,0 +1,53 @@
+name: build-app-for-testing-session
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  # pr_commented:
+  #   # This job only runs for pull request comments
+  #   name: PR comment
+  #   if: ${{ github.event.issue.pull_request }}
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - run: |
+  #         echo A comment on PR $NUMBER
+  #       env:
+  #         NUMBER: ${{ github.event.issue.number }}
+
+  # check-comment:
+  #   name: Check comment
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     comment-id: ${{ steps.fc.outputs.comment-id }}
+  #   steps:
+  #     - name: Find Comment
+  #       uses: peter-evans/find-comment@v2
+  #       id: fc
+  #       with:
+  #         issue-number: ${{ github.event.pull_request.number }}
+  #         body-includes: 'Hello'
+
+  # run-other-workflow:
+  #   name: Run if comment is detected
+  #   needs: [check-comment]
+  #   runs-on: macos-14
+  #   if: ${{ needs.check-comment.outputs.comment-id != 0 }}
+  #   steps:
+  #   - name: Display message
+  #     run: echo "A comment is added on the PR"
+
+  long-job:
+    name: A long job that only runs on a specific PR comment
+    runs-on: macos-14
+    if: ${{ github.event.issue.pull_request && github.event.comment.body == '/build' }}
+    steps:
+    - name: Display message
+      run: echo "A comment is added on the PR"
+
+  long-job-2:
+    name: Show comment
+    runs-on: macos-14
+    steps:
+    - name: Display message
+      run: echo "${{ github.event.comment.body }}"
