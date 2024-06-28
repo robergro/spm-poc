@@ -2,52 +2,56 @@ name: build-app-for-testing-session
 on:
   issue_comment:
     types: [created]
+    
+env:
+  app_name: SparkDemo
+  pr_comment_name: "/buildDemo"
+  xcode_path: "/Applications/Xcode_15.4.app"
+  xcodebuild_sdk: -sdk iphonesimulator
+  xcodebuild_derivedData: ".derivedData/"
+  xcodebuild_destination: -destination 'platform=iOS Simulator,name=iPhone 15 pro,OS=17.5'
 
 jobs:
-  # pr_commented:
-  #   # This job only runs for pull request comments
-  #   name: PR comment
-  #   if: ${{ github.event.issue.pull_request }}
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - run: |
-  #         echo A comment on PR $NUMBER
-  #       env:
-  #         NUMBER: ${{ github.event.issue.number }}
-
-  # check-comment:
-  #   name: Check comment
-  #   runs-on: ubuntu-latest
-  #   outputs:
-  #     comment-id: ${{ steps.fc.outputs.comment-id }}
-  #   steps:
-  #     - name: Find Comment
-  #       uses: peter-evans/find-comment@v2
-  #       id: fc
-  #       with:
-  #         issue-number: ${{ github.event.pull_request.number }}
-  #         body-includes: 'Hello'
-
-  # run-other-workflow:
-  #   name: Run if comment is detected
-  #   needs: [check-comment]
-  #   runs-on: macos-14
-  #   if: ${{ needs.check-comment.outputs.comment-id != 0 }}
-  #   steps:
-  #   - name: Display message
-  #     run: echo "A comment is added on the PR"
-
   long-job:
-    name: A long job that only runs on a specific PR comment
+    name: Check if Pull Request Comment contains '/buildDemo'
     runs-on: macos-14
-    if: ${{ github.event.issue.pull_request && github.event.comment.body == '/build' }}
+    if: ${{ github.event.issue.pull_request && github.event.comment.body == '/buildDemo' }}
     steps:
-    - name: Display message
-      run: echo "A comment is added on the PR"
-
-  long-job-2:
-    name: Show comment
-    runs-on: macos-14
-    steps:
-    - name: Display message
-      run: echo "${{ github.event.comment.body }}"
+    - name: Select Xcode
+      run: sudo xcode-select -s ${{ env.xcode_path }}
+    - name: Checkout Action
+      uses: actions/checkout@v4
+    - name: Copy sourcery from common packages repository
+      run: |
+        git clone https://github.com/adevinta/spark-ios
+        cd spark-ios
+    - name: Get current folder
+      run: |
+        echo "Current folder"
+        pwd
+        ls
+        echo '-------'
+    - name: Run xcodegen
+      uses: xavierLowmiller/xcodegen-action@1.2.2
+      with:
+        spec: spark-ios/project.yml
+        version: '2.41.0'
+    - name: Build
+      run: |
+        cd spark-ios
+        xcodebuild -scheme ${{ env.app_name }} -derivedDataPath ${{ env.xcodebuild_derivedData }} ${{ env.xcodebuild_sdk }} ${{ env.xcodebuild_destination }} -resultBundlePath ${{ env.app_name }}.xcresult build
+    - name: Upload xcresult file
+      uses: actions/upload-artifact@v4
+      if: ${{ failure() }}
+      with:
+        name: ${{ env.app_name }}-${{ github.run_number }}.xcresult
+        path: ${{ env.app_name }}.xcresult
+        retention-days: 15
+    - name: Upload build file
+      uses: actions/upload-artifact@v4
+      if: ${{ success() }}
+      with:
+        name: SparkDemo.app
+        path: |
+          spark-ios/${{ env.xcodebuild_derivedData }}Build/Products/Debug-iphonesimulator/SparkDemo.app
+        retention-days: 15
