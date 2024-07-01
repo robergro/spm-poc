@@ -28,10 +28,38 @@ jobs:
       run: sudo xcode-select -s ${{ env.xcode_path }}
     - name: Checkout Action
       uses: actions/checkout@v4
-    - name: Clone the demo project
-      # TODO: remove the branch : -b spm/migration5
+
+
+    - name: Get the name of the spark-ios branch to clone
       run: |
-        git clone -b spm/migration5 https://github.com/adevinta/spark-ios
+        echo "spark_ios_branch_2"=hello" >> "$GITHUB_ENV"
+
+        if [ -z ${github.event.comment.body#"env.pr_comment_name"} ];then
+         echo "spark_ios_branch"=main" >> "$GITHUB_ENV"
+        else
+         echo "spark_ios_branch"=$foo" >> "$GITHUB_ENV"
+        fi
+
+
+    - name: Clone the demo project from a specific branch
+      run: |
+        echo "branch2 $spark_ios_branch_2"
+        echo "branch $spark_ios_branch"
+
+        echo "comment=${{ github.event.comment.body }}" >> "$GITHUB_ENV"
+        echo "Comment $comment"
+        echo "prefix=${{ env.pr_comment_name }}" >> "$GITHUB_ENV"
+        echo "Prefix $prefix"
+        echo "branch=${comment#"$prefix"} " >> "$GITHUB_ENV"
+        echo "Branch1 $branch"
+        echo "branch=${branch// /}" >> "$GITHUB_ENV"
+        echo "Branch1 $branch"
+        if [ -z "$branch" ];then
+          echo "branch=main" >> "$GITHUB_ENV"
+        fi
+        echo "Branch to clone $branch"
+        echo $GITHUB_ENV
+        git clone -b $branch https://github.com/adevinta/spark-ios
     - name: Run xcodegen
       uses: xavierLowmiller/xcodegen-action@1.2.2
       with:
