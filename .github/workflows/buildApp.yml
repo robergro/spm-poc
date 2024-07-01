@@ -35,7 +35,8 @@ jobs:
 
     - name: Set the name of the spark-ios branch to clone
       run: |
-        echo "spark_ios_branch=${pr_comment#"$prefix_to_remove"}" >> "$GITHUB_ENV"
+        value=${pr_comment#"$prefix_to_remove"}
+        echo "spark_ios_branch=$value" >> "$GITHUB_ENV"
 
     - name: Clone the demo project from a specific branch
       run: |
