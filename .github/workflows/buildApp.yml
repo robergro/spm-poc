@@ -28,10 +28,18 @@ jobs:
       run: sudo xcode-select -s ${{ env.xcode_path }}
     - name: Checkout Action
       uses: actions/checkout@v4
-    - name: Clone the demo project
-      # TODO: remove the branch : -b spm/migration5
+    - name: Clone the demo project from a specific branch
+      shell: bash
       run: |
-        git clone -b spm/migration5 https://github.com/adevinta/spark-ios
+        comment=${{ github.event.comment.body }}
+        prefix=${{ env.pr_comment_name }}
+        branch=${comment#"$prefix"} 
+        branch=${branch// /}
+        if [ -z "$branch" ];then
+        branch="main"
+        fi
+
+        git clone -b ${{ branch }} https://github.com/adevinta/spark-ios
     - name: Run xcodegen
       uses: xavierLowmiller/xcodegen-action@1.2.2
       with:
