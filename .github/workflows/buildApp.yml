@@ -29,9 +29,17 @@ jobs:
     - name: Checkout Action
       uses: actions/checkout@v4
     - name: Clone the demo project
-      # TODO: remove the branch : -b spm/migration5
       run: |
-        git clone -b spm/migration5 https://github.com/adevinta/spark-ios
+        # Get the main or other branch from the comment of the PR
+        comment=${github.event.comment.body}
+        prefix=${env.pr_comment_name}
+        branch=${comment#"$prefix"} # Remove prefix
+        branch=${foo// /} # Remove spaces
+        if [ -z "$branch" ];then
+        branch="main"
+        fi
+
+        git clone -b ${{ branch }} https://github.com/adevinta/spark-ios
     - name: Run xcodegen
       uses: xavierLowmiller/xcodegen-action@1.2.2
       with:
