@@ -16,7 +16,7 @@ jobs:
   long-job:
     name: Check if Pull Request Comment contains '/buildDemo'
     runs-on: macos-14
-    if: ${{ github.event.issue.pull_request && github.event.comment.body == '/buildDemo' }}
+    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/buildDemo') }}
     steps:
     # - name: Set Swift Version
     #   uses: swift-actions/setup-swift@v1
@@ -35,11 +35,20 @@ jobs:
 
     - name: Set the name of the spark-ios branch to clone
       run: |
-        echo "spark_ios_branch=${pr_comment#"$prefix_to_remove"}" >> "$GITHUB_ENV"
+        VALUE=${pr_comment#'/buildDemo'}
+
+        VERSION=${pr_comment#build}
+        echo Value: $VALUE
+        echo Version: $VERSION
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+
+        echo "spark_ios_branch=$value" >> "$GITHUB_ENV"
 
     - name: Clone the demo project from a specific branch
       run: |
         echo "branch $spark_ios_branch"
+        echo "VERSION $VERSION"
 
         echo "comment=${{ github.event.comment.body }}" >> "$GITHUB_ENV"
         echo "Comment $comment"
