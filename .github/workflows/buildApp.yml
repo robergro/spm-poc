@@ -5,7 +5,6 @@ on:
     
 env:
   app_name: SparkDemo
-  pr_comment_name: "/buildDemo"
   swift_version: '5.9'
   xcode_path: "/Applications/Xcode_15.4.app"
   xcodebuild_sdk: -sdk iphonesimulator
@@ -16,7 +15,7 @@ jobs:
   long-job:
     name: Check if Pull Request Comment contains '/buildDemo'
     runs-on: macos-14
-    if: ${{ github.event.issue.pull_request && github.event.comment.body == '/buildDemo' }}
+    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/buildDemo') }}
     steps:
     # - name: Set Swift Version
     #   uses: swift-actions/setup-swift@v1
@@ -31,15 +30,31 @@ jobs:
     - name: Set variables needed to clone spark-ios
       run: |
         echo "pr_comment=${{ github.event.comment.body }}" >> "$GITHUB_ENV"
-        echo "prefix_to_remove=${{ env.pr_comment_name }}" >> "$GITHUB_ENV"
 
     - name: Set the name of the spark-ios branch to clone
       run: |
-        echo "spark_ios_branch=${pr_comment#"$prefix_to_remove"}" >> "$GITHUB_ENV"
+        PR_COMMENT=${{ github.event.comment.body }}
+        echo "PR_COMMENT: $PR_COMMENT"
+
+        BRANCH=${PR_COMMENT#'/buildDemo'}
+        echo "BRANCH: $BRANCH"
+        if [ -z "$branch" ];then
+          BRANCH=main
+          echo "BRANCH2: $BRANCH"
+        fi
+
+        VERSION=${pr_comment#/build}
+        echo BRANCH: $BRANCH
+        echo Version: $VERSION
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+
+        echo "spark_ios_branch=$BRANCH" >> "$GITHUB_ENV"
 
     - name: Clone the demo project from a specific branch
       run: |
         echo "branch $spark_ios_branch"
+        echo "VERSION $VERSION"
 
         echo "comment=${{ github.event.comment.body }}" >> "$GITHUB_ENV"
         echo "Comment $comment"
