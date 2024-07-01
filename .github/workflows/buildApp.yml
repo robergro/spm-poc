@@ -17,66 +17,44 @@ jobs:
     runs-on: macos-14
     if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/buildDemo') }}
     steps:
-    # - name: Set Swift Version
-    #   uses: swift-actions/setup-swift@v1
-    #   with:
-    #     swift-version: ${{ env.swift_version }}
-    # - name: Get swift version
-    #   run: swift --version
-    # - name: Select Xcode
-    #   run: sudo xcode-select -s ${{ env.xcode_path }}
-    # - name: Checkout Action
-    #   uses: actions/checkout@v4
-    # - name: Set variables needed to clone spark-ios
-    #   run: |
-    #     echo "pr_comment=${{ github.event.comment.body }}" >> "$GITHUB_ENV"
+    - name: Set Swift Version
+      uses: swift-actions/setup-swift@v1
+      with:
+        swift-version: ${{ env.swift_version }}
 
-    # - name: Set the name of the spark-ios branch to clone
-    #   run: |
-    #     PR_COMMENT=${{ github.event.comment.body }}
-    #     echo "PR_COMMENT: $PR_COMMENT"
+    - name: Get swift version
+      run: swift --version
 
+    - name: Select Xcode
+      run: sudo xcode-select -s ${{ env.xcode_path }}
+
+    - name: Checkout Action
+      uses: actions/checkout@v4
+
+    # - name: Clone the demo project from a specific branch
+    #   run: |
+    #     PR_COMMENT="${{ github.event.comment.body }}"
     #     SPARK_IOS_BRANCH=${PR_COMMENT#'/buildDemo'}
-    #     echo "SPARK_IOS_BRANCH: $SPARK_IOS_BRANCH"
-    #     if [ -z "$SPARK_IOS_BRANCH" ];then
+    #     SPARK_IOS_BRANCH=${SPARK_IOS_BRANCH// /}
+    #     if [ -z $SPARK_IOS_BRANCH ];then
     #       SPARK_IOS_BRANCH=main
-    #       echo "SPARK_IOS_BRANCH2: $SPARK_IOS_BRANCH"
     #     fi
-        
-
-    #     echo "spark_ios_branch=$BRANCH" >> "$GITHUB_ENV"
-
-    - name: Clone the demo project from a specific branch
-      run: |
-        PR_COMMENT="${{ github.event.comment.body }}"
-        echo "PR_COMMENT: $PR_COMMENT"
-
-        SPARK_IOS_BRANCH=${PR_COMMENT#'/buildDemo'}
-        SPARK_IOS_BRANCH=${SPARK_IOS_BRANCH// /}
-
-        echo "SPARK_IOS_BRANCH: $SPARK_IOS_BRANCH"
-        if [ -z $SPARK_IOS_BRANCH ];then
-          SPARK_IOS_BRANCH=main
-          echo "SPARK_IOS_BRANCH2: $SPARK_IOS_BRANCH"
-        fi
-        
-        echo "FINAL: $SPARK_IOS_BRANCH"
-
-    # git clone -b $SPARK_IOS_BRANCH https://github.com/adevinta/spark-ios
-
-
-
+    #     echo "Branch to clone on spark-ios: $SPARK_IOS_BRANCH"
+    #     git clone -b $SPARK_IOS_BRANCH https://github.com/adevinta/spark-ios
     # - name: Run xcodegen
     #   uses: xavierLowmiller/xcodegen-action@1.2.2
     #   with:
     #     spec: spark-ios/project.yml
     #     version: '2.41.0'
-    # - name: Run swift script
-    #   run: swift test.swift
+
+    - name: Run swift script
+      run: swift test.swift "${PWD##*/}"
+
     # - name: Build
     #   run: |
     #     cd spark-ios
     #     xcodebuild -scheme ${{ env.app_name }} -derivedDataPath ${{ env.xcodebuild_derivedData }} ${{ env.xcodebuild_sdk }} ${{ env.xcodebuild_destination }} -resultBundlePath ${{ env.app_name }}.xcresult build
+
     # - name: Upload xcresult file
     #   uses: actions/upload-artifact@v4
     #   if: ${{ failure() }}
@@ -84,6 +62,7 @@ jobs:
     #     name: ${{ env.app_name }}-${{ github.run_number }}.xcresult
     #     path: ${{ env.app_name }}.xcresult
     #     retention-days: 15
+    
     # - name: Upload build file
     #   uses: actions/upload-artifact@v4
     #   if: ${{ success() }}

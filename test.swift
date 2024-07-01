@@ -1,3 +1,4 @@
 #!/usr/bin/swift
 
-print("Hello, world!")
+let package = CommandLine.arguments.last!
+print("Hello, \(package)")
