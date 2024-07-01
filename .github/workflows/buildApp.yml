@@ -16,7 +16,7 @@ jobs:
   long-job:
     name: Check if Pull Request Comment contains '/buildDemo'
     runs-on: macos-14
-    if: ${{ github.event.issue.pull_request && github.event.comment.body == '/buildDemo' }}
+    if: ${{ github.event.issue.pull_request && github.event.comment.body == env.pr_comment_name }}
     steps:
     - name: Set Swift Version
       uses: swift-actions/setup-swift@v1
@@ -31,7 +31,16 @@ jobs:
     - name: Clone the demo project
       # TODO: remove the branch : -b spm/migration5
       run: |
-        git clone -b spm/migration5 https://github.com/adevinta/spark-ios
+        # Get the main or other branch from the comment of the PR
+        comment=github.event.comment.body
+        prefix=env.pr_comment_name
+        branch=${comment#"$prefix"} # Remove prefix
+        branch=${foo// /} # Remove spaces
+        if [ -z "$branch" ];then
+        branch="main"
+        fi
+
+        git clone -b ${{ branch }} https://github.com/adevinta/spark-ios
     - name: Run xcodegen
       uses: xavierLowmiller/xcodegen-action@1.2.2
       with:
