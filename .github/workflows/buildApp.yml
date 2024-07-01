@@ -18,43 +18,66 @@ jobs:
     runs-on: macos-14
     if: ${{ github.event.issue.pull_request && github.event.comment.body == '/buildDemo' }}
     steps:
-    - name: Set Swift Version
-      uses: swift-actions/setup-swift@v1
-      with:
-        swift-version: ${{ env.swift_version }}
-    - name: Get swift version
-      run: swift --version
-    - name: Select Xcode
-      run: sudo xcode-select -s ${{ env.xcode_path }}
-    - name: Checkout Action
-      uses: actions/checkout@v4
-    - name: Clone the demo project
-      # TODO: remove the branch : -b spm/migration5
+    # - name: Set Swift Version
+    #   uses: swift-actions/setup-swift@v1
+    #   with:
+    #     swift-version: ${{ env.swift_version }}
+    # - name: Get swift version
+    #   run: swift --version
+    # - name: Select Xcode
+    #   run: sudo xcode-select -s ${{ env.xcode_path }}
+    # - name: Checkout Action
+    #   uses: actions/checkout@v4
+    - name: Set variables needed to clone spark-ios
       run: |
-        git clone -b spm/migration5 https://github.com/adevinta/spark-ios
-    - name: Run xcodegen
-      uses: xavierLowmiller/xcodegen-action@1.2.2
-      with:
-        spec: spark-ios/project.yml
-        version: '2.41.0'
-    - name: Run swift script
-      run: swift test.swift
-    - name: Build
+        echo "pr_comment=${{ github.event.comment.body }}" >> "$GITHUB_ENV"
+        echo "prefix_to_remove=${{ env.pr_comment_name }}" >> "$GITHUB_ENV"
+
+    - name: Set the name of the spark-ios branch to clone
       run: |
-        cd spark-ios
-        xcodebuild -scheme ${{ env.app_name }} -derivedDataPath ${{ env.xcodebuild_derivedData }} ${{ env.xcodebuild_sdk }} ${{ env.xcodebuild_destination }} -resultBundlePath ${{ env.app_name }}.xcresult build
-    - name: Upload xcresult file
-      uses: actions/upload-artifact@v4
-      if: ${{ failure() }}
-      with:
-        name: ${{ env.app_name }}-${{ github.run_number }}.xcresult
-        path: ${{ env.app_name }}.xcresult
-        retention-days: 15
-    - name: Upload build file
-      uses: actions/upload-artifact@v4
-      if: ${{ success() }}
-      with:
-        name: SparkDemo.app
-        path: |
-          spark-ios/${{ env.xcodebuild_derivedData }}Build/Products/Debug-iphonesimulator/SparkDemo.app
-        retention-days: 15
+        echo "spark_ios_branch=${pr_comment#"$prefix_to_remove"}" >> "$GITHUB_ENV"
+
+    - name: Clone the demo project from a specific branch
+      run: |
+        echo "branch $spark_ios_branch"
+
+        echo "comment=${{ github.event.comment.body }}" >> "$GITHUB_ENV"
+        echo "Comment $comment"
+        echo "prefix=${{ env.pr_comment_name }}" >> "$GITHUB_ENV"
+        echo "Prefix $prefix"
+        echo "branch=${comment#"$prefix"} " >> "$GITHUB_ENV"
+        echo "Branch1 $branch"
+        echo "branch=${branch// /}" >> "$GITHUB_ENV"
+        echo "Branch1 $branch"
+        if [ -z "$branch" ];then
+          echo "branch=main" >> "$GITHUB_ENV"
+        fi
+        echo "Branch to clone $branch"
+        echo $GITHUB_ENV
+        git clone -b $branch https://github.com/adevinta/spark-ios
+    # - name: Run xcodegen
+    #   uses: xavierLowmiller/xcodegen-action@1.2.2
+    #   with:
+    #     spec: spark-ios/project.yml
+    #     version: '2.41.0'
+    # - name: Run swift script
+    #   run: swift test.swift
+    # - name: Build
+    #   run: |
+    #     cd spark-ios
+    #     xcodebuild -scheme ${{ env.app_name }} -derivedDataPath ${{ env.xcodebuild_derivedData }} ${{ env.xcodebuild_sdk }} ${{ env.xcodebuild_destination }} -resultBundlePath ${{ env.app_name }}.xcresult build
+    # - name: Upload xcresult file
+    #   uses: actions/upload-artifact@v4
+    #   if: ${{ failure() }}
+    #   with:
+    #     name: ${{ env.app_name }}-${{ github.run_number }}.xcresult
+    #     path: ${{ env.app_name }}.xcresult
+    #     retention-days: 15
+    # - name: Upload build file
+    #   uses: actions/upload-artifact@v4
+    #   if: ${{ success() }}
+    #   with:
+    #     name: SparkDemo.app
+    #     path: |
+    #       spark-ios/${{ env.xcodebuild_derivedData }}Build/Products/Debug-iphonesimulator/SparkDemo.app
+    #     retention-days: 15
