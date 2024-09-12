@@ -18,6 +18,11 @@ jobs:
     if: ${{ github.event.issue.pull_request }}
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout pull request 🏁
+        uses: actions/checkout@v3
+        with:
+          ref: refs/pull/${{ github.event.issue.number }}/head
+
       - run: |
           echo A comment on PR $NUMBER - $PR_COMMENT - $GITHUB_REF - $BRANCH_NAME - $PR_URL
         env:
