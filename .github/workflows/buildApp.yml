@@ -19,11 +19,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          echo A comment on PR $NUMBER - $PR_COMMENT - $GITHUB_REF - $BRANCH_NAME
+          echo A comment on PR $NUMBER - $PR_COMMENT - $GITHUB_REF - $BRANCH_NAME - $PR_URL
         env:
           NUMBER: ${{ github.event.issue.number }}
           PR_COMMENT: ${{ github.event.comment.body }}
           BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+          PR_URL: ${{ github.event.issue.pull_request.url }}
 
   # long-job:
   #   name: Check if Pull Request Comment contains '/buildDemo'
